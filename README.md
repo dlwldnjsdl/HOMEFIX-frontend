@@ -17,7 +17,16 @@ npm install
 npm run dev
 ```
 
-브라우저: `http://localhost:5173/` (실제 BE 프록시 연결)
+브라우저에서 `http://localhost:5173/`으로 접속합니다.
+
+Vite는 기본적으로 `https://torysv.kro.kr/fixmyhome/api/v1`에 연결합니다. 로컬 백엔드가 `8000`번 포트의 `/v1`에서 실행 중이라면 프로젝트 루트의 `.env`에 아래 값을 설정하세요.
+
+```dotenv
+API_PROXY_TARGET=http://127.0.0.1:8000
+API_PROXY_PATH=/v1
+```
+
+`API_PROXY_TARGET`에 백엔드 주소를, `API_PROXY_PATH`에 API 경로 접두사를 입력하세요. `API_PROXY_PATH`를 비우면 `/api/v1`이 사용됩니다. 저장한 뒤 개발 서버를 재시작하면 적용됩니다.
 
 배포 빌드:
 
