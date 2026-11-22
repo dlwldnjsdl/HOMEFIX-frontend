@@ -1,0 +1,322 @@
+[
+  {
+    "method": "POST",
+    "path": "/auth/signup"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/me"
+  },
+  {
+    "method": "PATCH",
+    "path": "/auth/role"
+  },
+  {
+    "method": "GET",
+    "path": "/public/service-info"
+  },
+  {
+    "method": "GET",
+    "path": "/public/technicians"
+  },
+  {
+    "method": "GET",
+    "path": "/public/technicians/{technicianId}"
+  },
+  {
+    "method": "GET",
+    "path": "/public/guidance"
+  },
+  {
+    "method": "POST",
+    "path": "/requests"
+  },
+  {
+    "method": "GET",
+    "path": "/requests"
+  },
+  {
+    "method": "GET",
+    "path": "/requests/{requestId}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/requests/{requestId}"
+  },
+  {
+    "method": "PUT",
+    "path": "/requests/{requestId}/visit-details"
+  },
+  {
+    "method": "POST",
+    "path": "/requests/{requestId}/closure"
+  },
+  {
+    "method": "POST",
+    "path": "/requests/{requestId}/work-items"
+  },
+  {
+    "method": "PATCH",
+    "path": "/work-items/{workItemId}"
+  },
+  {
+    "method": "PUT",
+    "path": "/work-items/{workItemId}/confirmation"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/solutions"
+  },
+  {
+    "method": "POST",
+    "path": "/work-items/{workItemId}/outcomes"
+  },
+  {
+    "method": "POST",
+    "path": "/requests/{requestId}/photos"
+  },
+  {
+    "method": "PUT",
+    "path": "/photos/{photoId}"
+  },
+  {
+    "method": "GET",
+    "path": "/media/{mediaId}"
+  },
+  {
+    "method": "POST",
+    "path": "/requests/{requestId}/records"
+  },
+  {
+    "method": "PATCH",
+    "path": "/records/{recordId}"
+  },
+  {
+    "method": "GET",
+    "path": "/requests/{requestId}/timeline"
+  },
+  {
+    "method": "PUT",
+    "path": "/requests/{requestId}/photo-groups"
+  },
+  {
+    "method": "POST",
+    "path": "/requests/{requestId}/ai-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/requests/{requestId}/ai-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/ai-jobs/{jobId}"
+  },
+  {
+    "method": "PUT",
+    "path": "/requests/{requestId}/ai-dialogue"
+  },
+  {
+    "method": "GET",
+    "path": "/technicians/me"
+  },
+  {
+    "method": "PUT",
+    "path": "/technicians/me/profile"
+  },
+  {
+    "method": "POST",
+    "path": "/technicians/me/portfolio-photos"
+  },
+  {
+    "method": "GET",
+    "path": "/technicians/{technicianId}/portfolio"
+  },
+  {
+    "method": "POST",
+    "path": "/technicians/me/cases"
+  },
+  {
+    "method": "PATCH",
+    "path": "/technicians/me/cases/{caseId}"
+  },
+  {
+    "method": "GET",
+    "path": "/cases/{caseId}"
+  },
+  {
+    "method": "GET",
+    "path": "/technicians/me/schedule"
+  },
+  {
+    "method": "PUT",
+    "path": "/technicians/me/schedule"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/case-recommendations"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/general-candidates"
+  },
+  {
+    "method": "PUT",
+    "path": "/work-items/{workItemId}/route-exploration"
+  },
+  {
+    "method": "GET",
+    "path": "/technicians/me/route-candidates"
+  },
+  {
+    "method": "POST",
+    "path": "/route-candidates/{candidateId}/interests"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/interests"
+  },
+  {
+    "method": "POST",
+    "path": "/work-items/{workItemId}/consultations"
+  },
+  {
+    "method": "GET",
+    "path": "/consultations"
+  },
+  {
+    "method": "GET",
+    "path": "/consultations/{consultationId}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/consultations/{consultationId}"
+  },
+  {
+    "method": "POST",
+    "path": "/consultations/{consultationId}/quotes"
+  },
+  {
+    "method": "PATCH",
+    "path": "/quotes/{quoteId}"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/quotes"
+  },
+  {
+    "method": "POST",
+    "path": "/reservation-checks"
+  },
+  {
+    "method": "PUT",
+    "path": "/reservation-checks/{checkId}/confirmation"
+  },
+  {
+    "method": "POST",
+    "path": "/work-items/{workItemId}/reservations"
+  },
+  {
+    "method": "GET",
+    "path": "/reservations"
+  },
+  {
+    "method": "GET",
+    "path": "/reservations/{reservationId}"
+  },
+  {
+    "method": "POST",
+    "path": "/reservations/{reservationId}/cancellation"
+  },
+  {
+    "method": "POST",
+    "path": "/reservations/{reservationId}/changes"
+  },
+  {
+    "method": "PATCH",
+    "path": "/reservation-changes/{changeId}"
+  },
+  {
+    "method": "PUT",
+    "path": "/reservations/{reservationId}/early-start-consent"
+  },
+  {
+    "method": "POST",
+    "path": "/reservations/{reservationId}/work-events"
+  },
+  {
+    "method": "PUT",
+    "path": "/reservations/{reservationId}/end-location"
+  },
+  {
+    "method": "PUT",
+    "path": "/reservations/{reservationId}/preparation-notes"
+  },
+  {
+    "method": "POST",
+    "path": "/work-items/{workItemId}/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/deliveries"
+  },
+  {
+    "method": "GET",
+    "path": "/deliveries/{deliveryId}"
+  },
+  {
+    "method": "PUT",
+    "path": "/deliveries/{deliveryId}/confirmation"
+  },
+  {
+    "method": "PUT",
+    "path": "/work-items/{workItemId}/report"
+  },
+  {
+    "method": "GET",
+    "path": "/work-items/{workItemId}/report"
+  },
+  {
+    "method": "PUT",
+    "path": "/work-items/{workItemId}/report/confirmation"
+  },
+  {
+    "method": "POST",
+    "path": "/deliveries/{deliveryId}/pdf-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/deliveries/{deliveryId}/pdf-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/pdf-jobs/{jobId}"
+  },
+  {
+    "method": "GET",
+    "path": "/pdf-jobs/{jobId}/content"
+  },
+  {
+    "method": "POST",
+    "path": "/deletion-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/deletion-jobs"
+  },
+  {
+    "method": "GET",
+    "path": "/deletion-jobs/{jobId}"
+  },
+  {
+    "method": "POST",
+    "path": "/deletion-jobs/{jobId}/retry"
+  }
+]
