@@ -12,13 +12,21 @@ export function itemsOf<T>(value: unknown): T[] { if (Array.isArray(value))
 export function firstWork(request?: Request | null): WorkItem | undefined { return request?.workItems?.[0]; }
 export function allPhotos(request?: Request | null): Photo[] { if (!request?.photos)
     return []; return [...(request.photos.confirmedDatePhotos || []), ...((request.photos.unknownDatePhotos || request.photos.unconfirmedDatePhotos) || [])]; }
-export function assertPhotos(files: File[], existing = 0) { if (!files.length || files.length + existing > 5)
-    throw Error('사진은 한 번에 1~5장까지 선택할 수 있어요.'); for (const f of files) {
-    if (!['image/jpeg', 'image/png'].includes(f.type))
-        throw Error('JPG·PNG 사진만 등록할 수 있어요.');
-    if (f.size > 10000000)
-        throw Error('사진은 파일당 10MB 이하여야 해요.');
-} }
+export const maxPhotoCount = 5;
+export function assertPhotos(files: File[], existing = 0) {
+    if (!files.length || files.length + existing > maxPhotoCount) {
+        throw Error(`사진은 한 번에 1~${maxPhotoCount}장까지 선택할 수 있어요.`);
+    }
+
+    for (const file of files) {
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            throw Error('JPG·PNG 사진만 등록할 수 있어요.');
+        }
+        if (file.size > 10000000) {
+            throw Error('사진은 파일당 10MB 이하여야 해요.');
+        }
+    }
+}
 export function id(value: string) { return encodeURIComponent(value); }
 export function safeExternalContact(value: string) { const v = value.trim(); if (/^\+?[0-9\s()-]{7,}$/.test(v))
     return `tel:${v.replace(/[^+0-9]/g, '')}`; if (/^https:\/\//i.test(v))
