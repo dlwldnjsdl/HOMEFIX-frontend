@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api } from '../services/api';
 import type { Session } from '../types/models';
 export type Screen = 'home' | 'login' | 'signup' | 'new' | 'requests' | 'detail' | 'ai' | 'solutions' | 'quotes' | 'candidates' | 'experts' | 'expert' | 'bookings' | 'booking' | 'records' | 'report' | 'consultations' | 'consultation' | 'profile' | 'tech' | 'tech-profile' | 'tech-schedule' | 'tech-routes' | 'tech-cases' | 'privacy';
@@ -6,6 +6,12 @@ export interface Route {
     screen: Screen;
     id?: string;
     from?: Screen;
+}
+export interface ToastState {
+    id: number;
+    message: string;
+    kind: 'error' | 'success';
+    leaving: boolean;
 }
 interface Context {
     session: Session | null;
@@ -17,10 +23,7 @@ interface Context {
     navigate(screen: Screen, id?: string): void;
     back(): void;
     notice(message: string, kind?: 'error' | 'success'): void;
-    toast: {
-        message: string;
-        kind: 'error' | 'success';
-    } | null;
+    toast: ToastState | null;
     clearToast(): void;
     mutate<T>(fn: () => Promise<T>, success?: string): Promise<T | undefined>;
     busy: boolean;
@@ -34,13 +37,43 @@ export function AppProvider({ children }: {
     const [initializing, setInitializing] = useState(true);
     const [route, setRoute] = useState<Route>(currentRoute);
     const [history, setHistory] = useState<Route[]>([]);
-    const [toast, setToast] = useState<{
-        message: string;
-        kind: 'error' | 'success';
-    } | null>(null);
+    const [toast, setToast] = useState<ToastState | null>(null);
     const [busy, setBusy] = useState(false);
-    const notice = useCallback((message: string, kind: 'error' | 'success' = 'success') => setToast({ message, kind }), []);
-    const clearToast = useCallback(() => setToast(null), []);
+    const toastSeqRef = useRef(0);
+    const fadeTimerRef = useRef<number | null>(null);
+    const clearTimerRef = useRef<number | null>(null);
+
+    const resetToastTimers = useCallback(() => {
+        if (fadeTimerRef.current !== null) {
+            window.clearTimeout(fadeTimerRef.current);
+            fadeTimerRef.current = null;
+        }
+        if (clearTimerRef.current !== null) {
+            window.clearTimeout(clearTimerRef.current);
+            clearTimerRef.current = null;
+        }
+    }, []);
+
+    const clearToast = useCallback(() => {
+        resetToastTimers();
+        setToast(null);
+    }, [resetToastTimers]);
+
+    const notice = useCallback((message: string, kind: 'error' | 'success' = 'success') => {
+        resetToastTimers();
+        const nextId = ++toastSeqRef.current;
+        const holdMs = kind === 'error' ? 4000 : 2600;
+        const fadeMs = 350;
+        setToast({ id: nextId, message, kind, leaving: false });
+        fadeTimerRef.current = window.setTimeout(() => {
+            setToast(prev => (prev && prev.id === nextId ? { ...prev, leaving: true } : prev));
+        }, holdMs);
+        clearTimerRef.current = window.setTimeout(() => {
+            setToast(prev => (prev && prev.id === nextId ? null : prev));
+        }, holdMs + fadeMs);
+    }, [resetToastTimers]);
+
+    useEffect(() => resetToastTimers, [resetToastTimers]);
     const refreshSession = useCallback(async () => { try {
         setSession(await api.me() as Session);
     }

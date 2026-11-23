@@ -1,8 +1,15 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../services/api';
-import { useApp, type Screen } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import { day, fieldLabel, firstWork, money, statusLabel, allPhotos } from '../lib/format';
 import type { Request, Technician, Photo } from '../types/models';
+export type RegionBox = {
+    photoId: string;
+    width: number;
+    height: number;
+    box: [number, number, number, number];
+    description?: string;
+};
 export function Icon({ name, size = 21, className = '' }: {
     name: string;
     size?: number;
@@ -53,15 +60,87 @@ export function Button({ children, onClick, kind = 'primary', disabled = false, 
     disabled?: boolean;
     type?: 'button' | 'submit';
 }) { return <button type={type} disabled={disabled} className={`rx-btn rx-btn-${kind}`} onClick={onClick}>{children}</button>; }
-export function MediaImage({ photo, alt = '', className = '' }: {
+export function MediaImage({ photo, mediaId, alt = '', className = '' }: {
     photo?: Photo | null;
+    mediaId?: string | null;
     alt?: string;
     className?: string;
-}) { const [url, setUrl] = useState<string | null>(null); useEffect(() => { let valid = true; let objectUrl: string | null = null; if (photo?.media?.mediaId) {
-    api.blob(`/media/${encodeURIComponent(photo.media.mediaId)}`).then((blob: Blob) => { objectUrl = URL.createObjectURL(blob); if (valid)
-        setUrl(objectUrl); }).catch(() => setUrl(null));
-} return () => { valid = false; if (objectUrl)
-    URL.revokeObjectURL(objectUrl); }; }, [photo?.media?.mediaId]); return url ? <img className={className} src={url} alt={alt}/> : <div className={`rx-photo-placeholder ${className}`}><Icon name="home" size={27}/></div>; }
+}) {
+    const resolvedId = mediaId || photo?.media?.mediaId || null;
+    const [url, setUrl] = useState<string | null>(null);
+    useEffect(() => {
+        let valid = true;
+        let objectUrl: string | null = null;
+        if (resolvedId) {
+            api.blob(`/media/${encodeURIComponent(resolvedId)}`).then((blob: Blob) => {
+                objectUrl = URL.createObjectURL(blob);
+                if (valid)
+                    setUrl(objectUrl);
+            }).catch(() => {
+                if (valid)
+                    setUrl(null);
+            });
+        }
+        else {
+            setUrl(null);
+        }
+        return () => {
+            valid = false;
+            if (objectUrl)
+                URL.revokeObjectURL(objectUrl);
+        };
+    }, [resolvedId]);
+    return url ? <img className={className} src={url} alt={alt}/> : <div className={`rx-photo-placeholder ${className}`}><Icon name="home" size={27}/></div>;
+}
+export function AnnotatedPhoto({ photo, mediaId, alt = '', regions = [], caption }: {
+    photo?: Photo | null;
+    mediaId?: string | null;
+    alt?: string;
+    regions?: RegionBox[];
+    caption?: string;
+}) {
+    return <figure className="rx-annotated-wrap">
+        <div className="rx-annotated">
+            <MediaImage photo={photo} mediaId={mediaId} alt={alt} className="rx-annotated-img"/>
+            {regions.map((region, idx) => {
+                const [x1, y1, x2, y2] = region.box;
+                return <div key={idx} className="rx-bbox" style={{
+                    left: `${x1 * 100}%`,
+                    top: `${y1 * 100}%`,
+                    width: `${(x2 - x1) * 100}%`,
+                    height: `${(y2 - y1) * 100}%`,
+                }} title={region.description || `변화 영역 #${idx + 1}`}>
+                    <span className="rx-bbox-label">#{idx + 1}</span>
+                </div>;
+            })}
+        </div>
+        {caption && <figcaption className="rx-muted">{caption}</figcaption>}
+        {regions.map((region, idx) => region.description ? <p key={idx} className="rx-bbox-note">영역 #{idx + 1}: {region.description}</p> : null)}
+    </figure>;
+}
+export function MarkdownView({ markdown }: { markdown?: string | null }) {
+    if (!markdown?.trim())
+        return <p className="rx-muted">아직 작성된 본문이 없어요.</p>;
+    const lines = markdown.split(/\r?\n/);
+    function renderInline(text: string) {
+        const parts = text.split(/(\*\*[^*]+\*\*)/g);
+        return parts.map((part, idx) => part.startsWith('**') && part.endsWith('**') ? <strong key={idx}>{part.slice(2, -2)}</strong> : part);
+    }
+    return <div className="rx-md">{lines.map((raw, idx) => {
+        const line = raw.trimEnd();
+        if (!line.trim())
+            return <div key={idx} className="rx-md-gap"/>;
+        if (line.startsWith('### '))
+            return <h4 key={idx}>{renderInline(line.slice(4))}</h4>;
+        if (line.startsWith('## '))
+            return <h3 key={idx}>{renderInline(line.slice(3))}</h3>;
+        if (line.startsWith('# '))
+            return <h2 key={idx}>{renderInline(line.slice(2))}</h2>;
+        if (/^[-*+]\s+/.test(line))
+            return <p key={idx} className="rx-md-li">• {renderInline(line.replace(/^[-*+]\s+/, ''))}</p>;
+        return <p key={idx}>{renderInline(line)}</p>;
+    })}</div>;
+}
 export function RequestCard({ request }: {
     request: Request;
 }) { const { navigate } = useApp(); const work = firstWork(request); const photo = allPhotos(request)[0]; return <button className="rx-request-card" onClick={() => navigate('detail', request.requestId)}><MediaImage photo={photo} className="rx-thumb"/><span className="rx-request-copy"><span className="rx-meta">{day(request.updatedAt)} · {fieldLabel(work?.facts?.fields?.[0])}</span><strong>{request.symptom}</strong><span className="rx-state-line">{statusLabel(work?.status || request.status)} · 요청 상세 보기</span></span><Icon name="chevron" size={18}/></button>; }

@@ -2,10 +2,57 @@ import { useState } from 'react';
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useRemote } from '../hooks/useRemote';
-import { ScreenIntro, PageHeader, Icon, TechnicianCard, Spinner, ErrorState, Empty, Button, PrivacyNote, Tag } from '../components/UI';
-import { fieldCodes, fieldLabel, itemsOf, safeExternalContact, id } from '../lib/format';
+import { ScreenIntro, PageHeader, Icon, TechnicianCard, Spinner, ErrorState, Empty, Button, PrivacyNote, Tag, MediaImage } from '../components/UI';
+import { fieldCodes, fieldLabel, itemsOf, safeExternalContact, id, statusLabel } from '../lib/format';
 import type { Technician } from '../types/models';
-export default function ExpertsPage() { const { navigate } = useApp(); const [search, setSearch] = useState(''), [field, setField] = useState(''); const { data, loading, error, refresh } = useRemote<any>(() => api.publicTech({ limit: 100 }), []); const rows = itemsOf<Technician>(data).filter(x => !field || x.fields?.includes(field)).filter(x => (`${x.displayName} ${x.regions?.map(r => `${r.district || ''} ${r.neighborhood || ''}`).join(' ')} ${x.fields?.map(fieldLabel).join(' ')}`).toLocaleLowerCase().includes(search.toLocaleLowerCase())); return <><PageHeader title="전문가 찾기" right={<button className="rx-iconbtn" onClick={() => void refresh()}><Icon name="refresh"/></button>}/><div className="rx-body rx-theme-sage"><ScreenIntro tag="FIND YOUR EXPERT" title="우리 집 수리, 믿을 수 있는 전문가와" subtitle="분야와 활동 지역을 확인하고 직접 연락해요." tone="sage" illustration="illustration-expert.svg"/><div className="rx-searchbox"><Icon name="search"/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="업체명, 동네, 수리 분야 검색" aria-label="기사 찾기 검색"/><Icon name="filter" size={18}/></div><div className="rx-filters rx-scroll-chips"><button className={!field ? 'selected' : ''} onClick={() => setField('')}>전체 분야</button>{fieldCodes.map(code => <button key={code} className={field === code ? 'selected' : ''} onClick={() => setField(code)}>{fieldLabel(code)}</button>)}</div><div className="rx-section-title"><div><h2>수리 전문가 {rows.length}명</h2><p>백엔드에서 반환한 공개 기사 정보만 표시해요.</p></div></div>{loading ? <Spinner /> : error ? <ErrorState message={error} onRetry={() => void refresh()}/> : rows.length ? rows.map(x => <TechnicianCard key={x.technicianId} expert={x} onOpen={() => navigate('expert', x.technicianId)}/>) : <Empty icon="tool" title="등록된 공개 기사가 없어요" detail="현재 선택한 조건에 맞는 기사 정보가 없습니다. 필터를 바꾸거나 다시 조회해 보세요." action={<Button kind="secondary" onClick={() => void refresh()}>목록 새로고침</Button>}/>}<PrivacyNote>공개 연락처를 통한 직접 연락은 로그인·접수·AI 분석 없이 이용할 수 있어요. 외부 연락은 앱 예약으로 자동 생성되지 않아요.</PrivacyNote></div></>; }
-export function ExpertDetailPage() { const { route, session } = useApp(); const { data: tech, loading, error } = useRemote<Technician>(() => api.get(`/public/technicians/${id(route.id!)}`) as Promise<Technician>, [route.id]); const { data: portfolio } = useRemote<any>(() => session && route.id ? api.get(`/technicians/${id(route.id)}/portfolio`) : Promise.resolve(null), [route.id, session?.loginId]); if (loading)
-    return <><PageHeader title="기사 프로필"/><Spinner /></>; if (error || !tech)
-    return <><PageHeader title="기사 프로필"/><ErrorState message={error || '기사를 찾을 수 없어요.'}/></>; return <><PageHeader title="기사 상세"/><div className="rx-body rx-theme-sage"><div className="rx-card rx-expert-profile"><div className="rx-expert-avatar large"><Icon name="tool" size={35}/></div><h2>{tech.displayName}</h2><p>{tech.regions?.map(x => `${x.district || ''} ${x.neighborhood || ''}`).join(' · ') || '활동 지역 확인'}</p><div className="rx-inline">{tech.fields?.map(f => <Tag key={f} tone="sage">{fieldLabel(f)}</Tag>)}</div></div><section className="rx-card"><h3>외부 업무 연락</h3><PrivacyNote>공개된 연락만 제공하며, 앱 내부 사용자·기사 채팅은 없어요.</PrivacyNote>{tech.contacts?.length ? tech.contacts.map((c, i) => { const link = safeExternalContact(c.value); return <div key={i} className="rx-contact"><span>{c.label}</span>{link ? <a target={link.startsWith('https') ? '_blank' : undefined} rel="noopener noreferrer" href={link}>{c.value} <Icon name="arrow" size={15}/></a> : <span>{c.value}</span>}</div>; }) : <p>공개된 업무 연락 정보가 없어요.</p>}</section><section className="rx-card"><h3>시공 사례와 포트폴리오</h3>{!session ? <p>시공 사례 상세는 로그인하면 확인할 수 있어요.</p> : portfolio?.cases?.length ? portfolio.cases.map((x: any) => <div key={x.caseId} className="rx-mini-card"><strong>{x.content?.title || '시공 사례'}</strong><p>{x.content?.workDescription}</p><small>{x.content?.source?.title || '출처 확인'}</small></div>) : <p>현재 공개된 시공 사례가 없어요.</p>}</section><Button kind="outline" onClick={() => window.history.back()}>이전 화면으로</Button></div></>; }
+export default function ExpertsPage() {
+    const { navigate } = useApp();
+    const [search, setSearch] = useState(''), [field, setField] = useState('');
+    const { data, loading, error, refresh } = useRemote<any>(() => api.publicTech({ limit: 100 }), []);
+    const rows = itemsOf<Technician>(data).filter(x => !field || x.fields?.includes(field)).filter(x => (`${x.displayName} ${x.regions?.map(r => `${r.district || ''} ${r.neighborhood || ''}`).join(' ')} ${x.fields?.map(fieldLabel).join(' ')}`).toLocaleLowerCase().includes(search.toLocaleLowerCase()));
+    return <><PageHeader title="전문가 찾기" right={<button className="rx-iconbtn" onClick={() => void refresh()}><Icon name="refresh"/></button>}/><div className="rx-body rx-theme-sage"><ScreenIntro tag="FIND YOUR EXPERT" title="우리 집 수리, 믿을 수 있는 전문가와" subtitle="분야와 활동 지역을 확인하고 직접 연락해요." tone="sage" illustration="illustration-expert.svg"/><div className="rx-searchbox"><Icon name="search"/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="업체명, 동네, 수리 분야 검색" aria-label="기사 찾기 검색"/><Icon name="filter" size={18}/></div><div className="rx-filters rx-scroll-chips"><button className={!field ? 'selected' : ''} onClick={() => setField('')}>전체 분야</button>{fieldCodes.map(code => <button key={code} className={field === code ? 'selected' : ''} onClick={() => setField(code)}>{fieldLabel(code)}</button>)}</div><div className="rx-section-title"><div><h2>수리 전문가 {rows.length}명</h2><p>백엔드에서 반환한 공개 기사 정보만 표시해요.</p></div></div>{loading ? <Spinner /> : error ? <ErrorState message={error} onRetry={() => void refresh()}/> : rows.length ? rows.map(x => <TechnicianCard key={x.technicianId} expert={x} onOpen={() => navigate('expert', x.technicianId)}/>) : <Empty icon="tool" title="등록된 공개 기사가 없어요" detail="현재 선택한 조건에 맞는 기사 정보가 없습니다. 필터를 바꾸거나 다시 조회해 보세요." action={<Button kind="secondary" onClick={() => void refresh()}>목록 새로고침</Button>}/>}<PrivacyNote>공개 연락처를 통한 직접 연락은 로그인·접수·AI 분석 없이 이용할 수 있어요. 외부 연락은 앱 예약으로 자동 생성되지 않아요.</PrivacyNote></div></>;
+}
+export function ExpertDetailPage() {
+    const { route, session } = useApp();
+    const { data: tech, loading, error } = useRemote<Technician>(() => api.get(`/public/technicians/${id(route.id!)}`) as Promise<Technician>, [route.id]);
+    const { data: portfolio } = useRemote<any>(() => session && route.id ? api.get(`/technicians/${id(route.id)}/portfolio`) : Promise.resolve(null), [route.id, session?.loginId]);
+    if (loading)
+        return <><PageHeader title="기사 프로필"/><Spinner /></>;
+    if (error || !tech)
+        return <><PageHeader title="기사 프로필"/><ErrorState message={error || '기사를 찾을 수 없어요.'}/></>;
+    return <><PageHeader title="기사 상세"/><div className="rx-body rx-theme-sage">
+        <div className="rx-card rx-expert-profile">
+            <div className="rx-expert-avatar large"><Icon name="tool" size={35}/></div>
+            <h2>{tech.displayName}</h2>
+            <p>{tech.regions?.map(x => `${x.district || ''} ${x.neighborhood || ''}`).join(' · ') || '활동 지역 확인'}</p>
+            <div className="rx-inline">{tech.fields?.map(f => <Tag key={f} tone="sage">{fieldLabel(f)}</Tag>)}</div>
+        </div>
+        <section className="rx-card">
+            <h3>외부 업무 연락</h3>
+            <PrivacyNote>공개된 연락만 제공하며, 앱 내부 사용자·기사 채팅은 없어요.</PrivacyNote>
+            {tech.contacts?.length ? tech.contacts.map((c, i) => {
+                const link = safeExternalContact(c.value);
+                return <div key={i} className="rx-contact"><span>{c.label}</span>{link ? <a target={link.startsWith('https') ? '_blank' : undefined} rel="noopener noreferrer" href={link}>{c.value} <Icon name="arrow" size={15}/></a> : <span>{c.value}</span>}</div>;
+            }) : <p>공개된 업무 연락 정보가 없어요.</p>}
+        </section>
+        <section className="rx-card">
+            <h3>시공 사례와 포트폴리오</h3>
+            {!session ? <p>시공 사례 상세는 로그인하면 확인할 수 있어요.</p> : portfolio?.cases?.length ? portfolio.cases.map((x: any) => <div key={x.caseId} className="rx-case-block">
+                <div className="rx-inline" style={{ justifyContent: 'space-between' }}>
+                    <strong>{x.content?.title || '시공 사례'}</strong>
+                    {x.content?.dataType && <Tag tone="lavender">{statusLabel(x.content.dataType)}</Tag>}
+                </div>
+                {x.content?.initialSymptom && <p>최초 증상: {x.content.initialSymptom}</p>}
+                {x.content?.confirmedCause && <p>확인된 원인: <strong>{x.content.confirmedCause}</strong></p>}
+                <p>작업 내용: {x.content?.workDescription}</p>
+                {x.content?.parts?.length > 0 && <p>사용 부품: {x.content.parts.join(', ')}</p>}
+                {(x.beforePhotos?.[0] || x.afterPhotos?.[0]) && <div className="rx-case-photos">
+                    {x.beforePhotos?.[0] && <div className="rx-case-photo-card"><MediaImage mediaId={x.beforePhotos[0].mediaId} alt="수리 전 사진"/><small>수리 전</small></div>}
+                    {x.afterPhotos?.[0] && <div className="rx-case-photo-card"><MediaImage mediaId={x.afterPhotos[0].mediaId} alt="수리 후 사진"/><small>수리 후</small></div>}
+                </div>}
+                <small className="rx-muted">출처: {x.content?.source?.title || '출처 확인'}</small>
+            </div>) : <p>현재 공개된 시공 사례가 없어요.</p>}
+        </section>
+        <Button kind="outline" onClick={() => window.history.back()}>이전 화면으로</Button>
+    </div></>;
+}
