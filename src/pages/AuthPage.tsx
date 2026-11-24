@@ -48,8 +48,6 @@ export default function AuthPage() {
 
     async function submit(e: FormEvent) {
         e.preventDefault();
-        if (register && password.length < 12)
-            return;
         await mutate(async () => {
             if (register)
                 await api.signup(loginId, password);
@@ -88,13 +86,11 @@ export default function AuthPage() {
                         placeholder="아이디를 입력해 주세요"
                     />
                 </Field>
-                <Field label="비밀번호" hint={register ? '12자 이상 설정해 주세요.' : '시연 계정은 시드 적재 시 출력된 공용 비밀번호를 입력해 주세요.'}>
+                <Field label="비밀번호" hint={!register ? '시연 계정은 시드 적재 시 출력된 공용 비밀번호를 입력해 주세요.' : undefined}>
                     <input
                         ref={passwordRef}
                         type="password"
                         autoComplete={register ? 'new-password' : 'current-password'}
-                        minLength={register ? 12 : undefined}
-                        required
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         placeholder="비밀번호"

@@ -76,6 +76,12 @@ export default function SolutionsPage() {
         return <><PageHeader title="해결 방법"/><Spinner /></>;
     if (error || solutionsError)
         return <><PageHeader title="해결 방법"/><ErrorState message={error || solutionsError || ''}/></>;
+
+    const selfHelp = solutions?.selfHelp;
+    const officialService = solutions?.officialService;
+    const selfHelpAvailable = selfHelp?.status === 'AVAILABLE';
+    const officialServiceAvailable = officialService?.status === 'AVAILABLE';
+
     return <><PageHeader title="내게 맞는 해결 방법" right={<button className="rx-iconbtn" onClick={() => { void refreshRequest(); void refreshSolutions(); }}><Icon name="refresh"/></button>}/><div className="rx-body"><div className="rx-ai-welcome"><span className="rx-ai-orbit"><Icon name="shield"/></span><div><h2>혼자 해결할 수 있을까요?</h2><p>서버가 확인한 공식 안내와 가능한 경로를 보여드려요.</p></div></div>
     <div className="rx-card rx-form">
         <div className="rx-inline" style={{ justifyContent: 'space-between' }}>
@@ -96,35 +102,80 @@ export default function SolutionsPage() {
         <Field label="모델명 (선택)"><input value={modelName} onChange={e => setModelName(e.target.value)} placeholder="예) SD-100"/></Field>
         <Button kind="outline" disabled={busy || (!productType.trim() && !manufacturer.trim() && !modelName.trim())} onClick={() => void saveProduct()}>제품 정보 저장하고 안내 다시 조회</Button>
     </div>
-    <div className="rx-card">
-        <div className="rx-inline"><Icon name="tool"/><h3>셀프 수리 · 검증된 가이드</h3></div>
-        <Tag tone={solutions?.selfHelp?.status === 'AVAILABLE' ? 'sage' : 'rose'}>{statusLabel(solutions?.selfHelp?.status) || '안내 없음'}</Tag>
-        <p>{solutions?.selfHelp?.message}</p>
-        {(solutions?.selfHelp?.guides || []).map((g: any) => <div key={g.guideId} className="rx-guide">
-            <h4>{g.source?.title || '적용 가능한 가이드'}</h4>
-            {g.conditions?.length > 0 && <p><strong>적용 조건:</strong> {g.conditions.join(' · ')}</p>}
-            {g.supplies?.length > 0 && <p><strong>준비물:</strong> {g.supplies.join(', ')}</p>}
-            {g.applicable && <ol>{g.steps?.map((s: string, i: number) => <li key={i}>{s}</li>)}</ol>}
-            {g.warnings?.length > 0 && <p className="rx-warn">주의: {g.warnings.join(' · ')}</p>}
-            {g.prohibitions?.length > 0 && <p className="rx-warn">금지: {g.prohibitions.join(' · ')}</p>}
-            {g.stopConditions?.length > 0 && <p><strong>즉시 중단 기준:</strong> {g.stopConditions.join(' · ')}</p>}
-            {g.source && <small>출처: {g.source.title || g.source.name || '검증된 가이드'} ({g.source.verifiedAt || g.source.version})</small>}
-        </div>)}
-    </div>
-    <div className="rx-card">
-        <div className="rx-inline"><Icon name="headset"/><h3>제조사 공식 AS</h3></div>
-        <Tag tone={solutions?.officialService?.status === 'AVAILABLE' ? 'sage' : 'rose'}>{statusLabel(solutions?.officialService?.status) || '안내 없음'}</Tag>
-        <p>{solutions?.officialService?.message}</p>
-        {(solutions?.officialService?.routes || []).map((r: any, i: number) => {
-            const href = safeExternalContact(r.contact || '');
-            return <div className="rx-official" key={i}>
-                <strong>{r.label}</strong>
-                <p>{r.productSpecific ? '제품·제조사별 공식 지원 경로' : '일반 공식 지원 경로'}</p>
-                {href ? <a href={href} target={href.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">{r.contact} <Icon name="arrow" size={15}/></a> : <span>{r.contact}</span>}
-            </div>;
-        })}
-    </div>
-    <div className="rx-card rx-form"><h3>직접 해결했나요?</h3><p>시도한 방법과 결과는 내 수리 기록에 남길 수 있어요.</p><Field label="시도한 조치"><input value={action} onChange={e => setAction(e.target.value)} placeholder="예) 점검 가이드 1~3단계 확인"/></Field><Field label="결과"><select value={result} onChange={e => setResult(e.target.value)}><option value="RESOLVED">해결됨</option><option value="UNRESOLVED">미해결</option><option value="UNAVAILABLE">이용 불가</option></select></Field><Field label="상세 메모"><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}/></Field><Button kind="outline" disabled={!action || !description || busy} onClick={() => void record('SELF_HELP')}>셀프 점검 결과 기록</Button><Button kind="outline" disabled={!action || !description || busy} onClick={() => void record('MANUFACTURER_AS')}>공식 AS 결과 기록</Button></div>
+    <details className="rx-card rx-collapsible-card">
+        <summary>
+            <h3>
+                <Icon name="tool"/>
+                <span>셀프 수리 · 검증된 가이드</span>
+                {selfHelpAvailable && <Tag tone="sage">{statusLabel(selfHelp.status)}</Tag>}
+                {!selfHelpAvailable && selfHelp?.guides?.length > 0 && <Tag tone="lavender">안내 있음</Tag>}
+                <Icon name="chevron" size={16} className="rx-collapsible-chevron"/>
+            </h3>
+        </summary>
+        <div className="rx-collapsible-content">
+            {!selfHelpAvailable && <Tag tone="rose">{statusLabel(selfHelp?.status) || '안내 없음'}</Tag>}
+            <p>{selfHelp?.message}</p>
+            {(selfHelp?.guides || []).map((g: any) => <div key={g.guideId} className="rx-guide">
+                <h4>{g.source?.title || '적용 가능한 가이드'}</h4>
+                {g.conditions?.length > 0 && <p><strong>적용 조건:</strong> {g.conditions.join(' · ')}</p>}
+                {g.supplies?.length > 0 && <p><strong>준비물:</strong> {g.supplies.join(', ')}</p>}
+                {g.applicable && <ol>{g.steps?.map((s: string, i: number) => <li key={i}>{s}</li>)}</ol>}
+                {g.warnings?.length > 0 && <p className="rx-warn">주의: {g.warnings.join(' · ')}</p>}
+                {g.prohibitions?.length > 0 && <p className="rx-warn">금지: {g.prohibitions.join(' · ')}</p>}
+                {g.stopConditions?.length > 0 && <p><strong>즉시 중단 기준:</strong> {g.stopConditions.join(' · ')}</p>}
+                {g.source && <small>출처: {g.source.title || g.source.name || '검증된 가이드'} ({g.source.verifiedAt || g.source.version})</small>}
+            </div>)}
+        </div>
+    </details>
+    <details className="rx-card rx-collapsible-card">
+        <summary>
+            <h3>
+                <Icon name="headset"/>
+                <span>제조사 공식 AS</span>
+                {officialServiceAvailable && <Tag tone="sage">{statusLabel(officialService.status)}</Tag>}
+                {!officialServiceAvailable && officialService?.routes?.length > 0 && <Tag tone="sage">일반 경로 있음</Tag>}
+                <Icon name="chevron" size={16} className="rx-collapsible-chevron"/>
+            </h3>
+        </summary>
+        <div className="rx-collapsible-content">
+            {!officialServiceAvailable && <Tag tone="rose">{statusLabel(officialService?.status) || '안내 없음'}</Tag>}
+            <p>{officialService?.message}</p>
+            {(officialService?.routes || []).map((r: any, i: number) => {
+                const href = safeExternalContact(r.contact || '');
+                return <div className="rx-official" key={i}>
+                    <strong>{r.label}</strong>
+                    <p>{r.productSpecific ? '제품·제조사별 공식 지원 경로' : '일반 공식 지원 경로'}</p>
+                    {href ? <a href={href} target={href.startsWith('https:') ? '_blank' : undefined} rel="noopener noreferrer">{r.contact} <Icon name="arrow" size={15}/></a> : <span>{r.contact}</span>}
+                </div>;
+            })}
+        </div>
+    </details>
+    <details className="rx-card rx-collapsible-card">
+        <summary>
+            <h3>
+                직접 해결했나요?
+                <Icon name="chevron" size={16} className="rx-collapsible-chevron"/>
+            </h3>
+        </summary>
+        <div className="rx-collapsible-content">
+            <p>시도한 방법과 결과는 내 수리 기록에 남길 수 있어요.</p>
+            <Field label="시도한 조치">
+                <input value={action} onChange={e => setAction(e.target.value)} placeholder="예) 점검 가이드 1~3단계 확인"/>
+            </Field>
+            <Field label="결과">
+                <select value={result} onChange={e => setResult(e.target.value)}>
+                    <option value="RESOLVED">해결됨</option>
+                    <option value="UNRESOLVED">미해결</option>
+                    <option value="UNAVAILABLE">이용 불가</option>
+                </select>
+            </Field>
+            <Field label="상세 메모">
+                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}/>
+            </Field>
+            <Button kind="outline" disabled={!action || !description || busy} onClick={() => void record('SELF_HELP')}>셀프 점검 결과 기록</Button>
+            <Button kind="outline" disabled={!action || !description || busy} onClick={() => void record('MANUFACTURER_AS')}>공식 AS 결과 기록</Button>
+        </div>
+    </details>
     <div className="rx-card rx-cta-card">
         <Icon name="tool"/>
         <h3>전문가의 도움이 필요하다면</h3>

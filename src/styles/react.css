@@ -56,3 +56,59 @@
 .rx-toast.leaving { opacity:0; transform:translate(-50%, 8px); pointer-events:none; }
 @keyframes rxToastIn { from { opacity:0; transform:translate(-50%, 10px); } to { opacity:1; transform:translate(-50%, 0); } }
 
+.rx-card.rx-collapsible-card {
+  display: block;
+  padding: 0;
+}
+
+.rx-collapsible-card > summary {
+  display: block;
+  padding: 20px 17px;
+  border-radius: inherit;
+  list-style: none;
+  cursor: pointer;
+}
+
+.rx-collapsible-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rx-collapsible-card > summary:focus-visible {
+  outline-offset: -3px;
+}
+
+.rx-collapsible-card > summary h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rx-collapsible-chevron {
+  margin-left: auto;
+  color: var(--rx-muted);
+  transform: rotate(90deg);
+}
+
+.rx-collapsible-card[open] > summary {
+  padding-bottom: 13px;
+}
+
+.rx-collapsible-card[open] > summary .rx-collapsible-chevron {
+  transform: rotate(-90deg);
+}
+
+.rx-collapsible-content {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+  padding: 0 17px 20px;
+}
+
+.rx-profile .rx-empty > .rx-duo-buttons {
+  width: min(100%, 180px);
+}
+
+.rx-profile .rx-empty > .rx-duo-buttons > .rx-btn {
+  white-space: nowrap;
+}

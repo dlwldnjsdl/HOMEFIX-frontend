@@ -13,7 +13,6 @@ type RequestExamplePreset = {
     capturedOn: string;
     district: string;
     neighborhood: string;
-    ai: boolean;
     product: { productType: string; manufacturer: string; modelName: string };
     photos: { asset: string; filename: string; description: string }[];
 };
@@ -27,7 +26,6 @@ const REQUEST_PRESETS: RequestExamplePreset[] = [
         capturedOn: '',
         district: '마포구',
         neighborhood: '연남동',
-        ai: false,
         product: { productType: '미닫이문', manufacturer: '고쳐야집 모의 도어', modelName: 'SD-100' },
         photos: [
             { asset: 'sample-sliding-door-full.jpg', filename: 'sample-sliding-door-full.jpg', description: '거실 미닫이문 전체 사진' },
@@ -42,7 +40,6 @@ const REQUEST_PRESETS: RequestExamplePreset[] = [
         capturedOn: 'TODAY',
         district: '마포구',
         neighborhood: '연남동',
-        ai: false,
         product: { productType: '싱크대 수전', manufacturer: '고쳐야집 모의 수전', modelName: 'FK-200' },
         photos: [
             { asset: 'sample-sink-drain-leak.jpg', filename: 'sample-sink-drain-leak.jpg', description: '싱크대 수전 사진' },
@@ -123,7 +120,6 @@ export default function NewRequestPage() {
             setCaptured(preset.capturedOn === 'TODAY' ? today() : preset.capturedOn);
             setDistrict(preset.district);
             setNeighborhood(preset.neighborhood);
-            setAI(preset.ai);
             setUrgent(false);
             notice(`${preset.key === 'scenario1' ? '시나리오 1' : '시나리오 2'} 예시 사진과 내용을 채웠어요.`);
         } catch {

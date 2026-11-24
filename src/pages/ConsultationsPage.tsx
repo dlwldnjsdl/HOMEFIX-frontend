@@ -23,7 +23,7 @@ export default function ConsultationsPage() {
         </div></>;
 }
 export function ConsultationDetailPage() {
-    const { route, session, mutate, busy } = useApp();
+    const { route, session, navigate, mutate, busy } = useApp();
     const { data: c, loading, error, refresh } = useRemote<Consultation>(() => api.get(`/consultations/${id(route.id!)}`) as Promise<Consultation>, [route.id]);
     const [deliveries, setDeliveries] = useState<any[]>([]);
     const [reason, setReason] = useState('');
@@ -153,6 +153,8 @@ export function ConsultationDetailPage() {
     const afterTotal = beforeTotal - discount;
     const discountRate = beforeTotal > 0 ? ((discount / beforeTotal) * 100).toFixed(1) : '0.0';
     const latestDelivery = deliveries.at(-1);
+    const quotes = c.quotes ?? [];
+    const isRequestOwner = session?.activeRole === 'USER';
 
     return <><PageHeader title="상담 상세" right={<button className="rx-iconbtn" onClick={() => void refresh()}><Icon name="refresh"/></button>}/>
         <div className="rx-body">
@@ -268,17 +270,21 @@ export function ConsultationDetailPage() {
                 </>}
             </div>}
 
-            {c.quotes?.length > 0 && <section className="rx-card">
-                <h3>발행된 견적 ({c.quotes.length}건)</h3>
-                {c.quotes.map((q: any) => <div key={q.quoteId} className="rx-case-block">
+            {quotes.length > 0 && <section className="rx-card">
+                <h3>발행된 견적 ({quotes.length}건)</h3>
+                {quotes.map(q => <div key={q.quoteId} className="rx-case-block">
                     <div className="rx-inline" style={{ justifyContent: 'space-between' }}>
                         <strong>{q.terms?.scope}</strong>
-                        <Tag tone={q.selectable ? 'sage' : 'rose'}>{statusLabel(q.status)}</Tag>
+                        <Tag tone={q.selectable ? 'sage' : 'rose'}>{isRequestOwner && q.selectable ? '선택 가능' : statusLabel(q.status)}</Tag>
                     </div>
                     <p>{datetime(q.terms?.startAt)} ~ {seoulTimePart(q.endAt)} ({q.terms?.durationMinutes}분)</p>
-                    <p>할인 전 {money(q.price?.beforeTotal)} → 확정 <strong>{money(q.price?.afterTotal)}</strong>{q.price?.discountAmount > 0 ? ` (-${money(q.price.discountAmount)}, ${q.price.discountRate}%)` : ''}</p>
+                    <p>할인 전 {money(q.price?.beforeTotal)} → 확정 <strong>{money(q.price?.afterTotal)}</strong>{q.price && q.price.discountAmount > 0 ? ` (-${money(q.price.discountAmount)}, ${q.price.discountRate}%)` : ''}</p>
                     {q.terms?.cost?.discountCondition && <p className="rx-muted">할인 조건: {q.terms.cost.discountCondition}</p>}
+                    {q.reasons?.length ? <p className="rx-warn">{q.reasons.join(' · ')}</p> : null}
                 </div>)}
+                {isRequestOwner && <Button onClick={() => navigate('quotes', `work-items/${c.workItemId}`)}>
+                    받은 견적 비교하기 <Icon name="arrow" size={17}/>
+                </Button>}
             </section>}
         </div></>;
 }

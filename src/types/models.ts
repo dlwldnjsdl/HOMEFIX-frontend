@@ -101,6 +101,7 @@ export interface Consultation {
     technicianId: string;
     workItemId: string;
     status: string;
+    quotes?: Quote[];
     quoteContext?: LooseRecord;
     [key: string]: any;
 }

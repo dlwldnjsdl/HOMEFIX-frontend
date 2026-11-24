@@ -4,11 +4,31 @@ import { useApp } from '../context/AppContext';
 import { useRemote } from '../hooks/useRemote';
 import { PageHeader, Spinner, ErrorState, Icon, Button, Field, Tag, MoneyRow, PrivacyNote, Empty } from '../components/UI';
 import { firstWork, id, datetime, fieldLabel, money, itemsOf, seoulTimePart } from '../lib/format';
-import type { Request, Quote, Technician } from '../types/models';
+import type { PageResult, Request, Quote, Technician } from '../types/models';
+
+async function requestForWorkItem(workItemId: string): Promise<Request> {
+    let cursor: string | null = null;
+    do {
+        const page = await api.requests({ cursor, limit: 100 }) as PageResult<Request> | Request[] | null;
+        const request = itemsOf<Request>(page).find(item =>
+            item.workItems?.some(work => work.workItemId === workItemId),
+        );
+        if (request)
+            return api.request(request.requestId);
+        cursor = Array.isArray(page) ? null : page?.nextCursor ?? null;
+    } while (cursor);
+    throw new Error('견적이 연결된 수리 요청을 찾을 수 없어요.');
+}
+
 export default function QuotesPage() {
     const { route, navigate, mutate, busy } = useApp();
-    const { data: request, loading, error } = useRemote<Request>(() => api.request(route.id!) as Promise<Request>, [route.id]);
-    const work = firstWork(request);
+    const workItemPrefix = 'work-items/';
+    const workItemId = route.id?.startsWith(workItemPrefix) ? route.id.slice(workItemPrefix.length) : undefined;
+    const { data: request, loading, error, refresh: refreshRequest } = useRemote<Request>(
+        () => workItemId ? requestForWorkItem(workItemId) : api.request(route.id!),
+        [route.id],
+    );
+    const work = workItemId ? request?.workItems.find(item => item.workItemId === workItemId) : firstWork(request);
     const { data: quotes, loading: ql, error: qe, refresh } = useRemote<any>(() => work ? api.quotes(work.workItemId) : Promise.resolve([]), [work?.workItemId]);
     const [selected, setSelected] = useState<Quote | null>(null), [check, setCheck] = useState<any>(null), [address, setAddress] = useState(''), [contact, setContact] = useState(''), [ready, setReady] = useState(false), [overlap, setOverlap] = useState(false);
     const [names, setNames] = useState<Record<string, string>>({});
@@ -62,7 +82,7 @@ export default function QuotesPage() {
             <div className="rx-overline">MY QUOTES</div>
             <h2 className="rx-page-title">견적을 꼼꼼하게 비교해요</h2>
             <p className="rx-lead">작업 범위·예상 종료 시각·할인 조건을 확인하고 선택해 주세요.</p>
-            {loading || ql ? <Spinner /> : error || qe ? <ErrorState message={error || qe || ''} onRetry={() => void refresh()}/> : rows.length ? rows.map(q => <div className="rx-quote" key={q.quoteId}>
+            {loading || ql ? <Spinner /> : error || qe ? <ErrorState message={error || qe || ''} onRetry={() => void (error ? refreshRequest() : refresh())}/> : rows.length ? rows.map(q => <div className="rx-quote" key={q.quoteId}>
                 <div className="rx-quote-head">
                     <div className="rx-expert-avatar"><Icon name="tool"/></div>
                     <div>
