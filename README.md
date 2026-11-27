@@ -47,10 +47,10 @@ npm run preview
 | 설정 | 용도 |
 |---|---|
 | `API_PROXY_TARGET`, `API_PROXY_PATH` | `npm run dev`에서 사용할 API 주소와 경로입니다. |
-| `NGINX_ENDPOINT` | Docker에서 FE를 제공할 경로입니다. 기본 `/test`이며 `/`도 사용할 수 있습니다. |
-| `FE_PORT` | 호스트의 루프백 포트입니다. 기본 `8080`입니다. |
+| `NGINX_ENDPOINT` | 컨테이너에서 FE를 제공할 경로입니다. 기본은 `/test`입니다. 호스트 Nginx에서 접두사를 제거하면 `/`로 지정합니다. |
+| `FE_PORT` | 호스트의 루프백 포트입니다. 비워 두면 배포는 `8090`, 로컬은 `8080`을 사용합니다. |
 | `DOCKER_API_UPSTREAM` | 선택 항목입니다. 컨테이너에서 접속 가능한 백엔드 URL에 API 경로까지 적습니다. 비우면 기본 원격 백엔드를 사용합니다. 호스트의 로컬 백엔드 예시는 `http://host.docker.internal:8000/v1`입니다. |
-| `PUBLIC_ORIGIN` | 운영에서는 호스트 Nginx의 공개 주소를 경로 없이 지정합니다. 로컬에서는 비워 두면 `http://127.0.0.1`과 `FE_PORT`를 사용합니다. |
+| `PUBLIC_ORIGIN` | 시작 스크립트에서 표시할 공개 URL입니다. 공개 경로까지 지정할 수 있습니다. 호스트 주소만 지정하면 `NGINX_ENDPOINT`를 붙입니다. 비워 두면 루프백 주소와 `FE_PORT`를 사용합니다. |
 | `IMAGE_TAG` | 운영에서는 Docker Hub에 올린 태그를 지정합니다. 기본 태그는 `latest`입니다. |
 
 ### 로컬 빌드 및 재시작
@@ -82,16 +82,23 @@ Docker Compose가 설치된 VM의 단일 디렉토리에 `docker-compose-deploym
 
 기본 실행은 `docker compose -f docker-compose-deployment.yaml up -d`와 같은 `.env` 및 Compose 설정을 사용합니다. 인수로 지정한 태그는 해당 실행에서 먼저 Pull합니다. 이후에도 그 버전을 기본으로 사용하려면 `.env`의 `IMAGE_TAG`를 갱신하세요. 시작 스크립트의 마지막 줄에 접속 주소가 표시됩니다.
 
-호스트 Nginx는 요청 경로를 보존해 Compose 포트로 전달합니다. 아래는 기존 `server` 블록에 추가할 `/test` 경로의 예시입니다. `proxy_pass` 끝에 `/`를 붙이지 마세요.
+호스트 Nginx가 공개 경로의 접두사를 제거하는 구성에서는 `.env`에 공개 URL과 컨테이너 경로를 지정합니다.
+
+```dotenv
+PUBLIC_ORIGIN=https://homefix.example.com/fixmyhome
+NGINX_ENDPOINT=/
+```
+
+호스트 Nginx의 `proxy_pass` 끝에 `/`를 붙이면 `/fixmyhome/`은 컨테이너의 `/`로, `/fixmyhome/assets/...`는 `/assets/...`로 전달됩니다.
 
 ```nginx
-location = /test {
-    return 308 /test/$is_args$args;
+location = /fixmyhome {
+    return 308 /fixmyhome/$is_args$args;
 }
 
-location ^~ /test/ {
+location /fixmyhome/ {
     client_max_body_size 64m;
-    proxy_pass http://127.0.0.1:8080;
+    proxy_pass http://127.0.0.1:8090/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -99,7 +106,7 @@ location ^~ /test/ {
 }
 ```
 
-공유 도메인에서는 `location`을 `NGINX_ENDPOINT`에 맞춥니다. FE 전용 도메인에서는 `location /`에서 같은 방식으로 전달하면 컨테이너가 `NGINX_ENDPOINT`에 따라 라우팅합니다. Docker의 포트 공개는 로컬과 운영 모두 `127.0.0.1`로 제한됩니다. 기본 경로에서 브라우저가 요청하는 `/test/api/v1/…`는 컨테이너 Nginx를 거쳐 `DOCKER_API_UPSTREAM`으로 전달됩니다.
+호스트 Nginx에서 API도 라우팅한다면 `/fixmyhome/api/v1/`에 해당하는 별도 `location`을 백엔드로 연결합니다. Docker의 포트 공개는 로컬과 운영 모두 `127.0.0.1`로 제한됩니다.
 
 ## 기술 스택
 
