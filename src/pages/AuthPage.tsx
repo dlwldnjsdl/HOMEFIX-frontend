@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Field, Button, Icon, PrivacyNote, Tag } from '../components/UI';
+import { appPath } from '../lib/appPath';
 import type { Role, Session } from '../types/models';
 type DemoAccountPreset = {
     label: string;
@@ -67,7 +68,7 @@ export default function AuthPage() {
 
     return <><PageHeader title={register ? '회원가입' : '로그인'}/>
         <div className="rx-body rx-login">
-            <img src="/assets/brand-app-icon.png" alt="고쳐야집"/>
+            <img src={appPath('assets/brand-app-icon.png')} alt="고쳐야집"/>
             <span className="rx-overline">WELCOME HOME</span>
             <h1>{register ? '우리 집 홈케어 시작하기' : '우리 집, 더 편안하게'}</h1>
             <p>혼자서도 뚝딱, 고쳐야ZIP!</p>

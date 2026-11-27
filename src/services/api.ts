@@ -1,3 +1,5 @@
+import { appPath } from '../lib/appPath';
+
 /**
  * 고쳐야집 HTTP client — Backend API Specification v1.1.
  * The server owns authorization, state transitions, quota and schedule validation.
@@ -5,7 +7,7 @@
  */
 const BASE = ((window as Window & {
     FIXMYHOME_API_BASE?: string;
-}).FIXMYHOME_API_BASE || '/api/v1').replace(/\/$/, '');
+}).FIXMYHOME_API_BASE || appPath('api/v1')).replace(/\/$/, '');
 const unresolvedMutations = new Map<string, string>();
 export class ApiError extends Error {
     code: string;

@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      minify: 'esbuild',
+      sourcemap: false
+    },
     server: {
       host: '127.0.0.1',
       port: 5173,

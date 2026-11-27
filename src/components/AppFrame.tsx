@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { PhoneStatus } from './PhoneStatus';
 import { Icon } from './UI';
 import { useApp, type Screen } from '../context/AppContext';
+import { appPath } from '../lib/appPath';
 const userTabs: {
     id: Screen;
     label: string;
@@ -26,7 +27,16 @@ export function AppFrame({ children }: {
       <main className={`page-content ${showTabs ? 'with-tabs' : ''}`} id="page-scroll">{children}</main>
       {showTabs && <nav className="rx-tabs" aria-label="앱 메뉴">{tabs.map(tab => <button key={tab.id} className={`rx-tab ${tab.id === 'home' ? 'rx-tab-center' : ''} ${current(tab.id) ? 'active' : ''}`} onClick={() => navigate(tab.id)} aria-current={current(tab.id) ? 'page' : undefined}><span className="rx-tab-symbol"><Icon name={tab.icon} size={22}/></span><span>{tab.label}</span></button>)}</nav>}
     </div></div>
-    <aside className="desktop-side"><div className="side-logo"><img src="/assets/brand-app-icon.png" alt=""/><span>고쳐야집</span></div><p className="side-title">혼자서도 뚝딱,<br />고쳐야ZIP!</p><p>사진 한 장에서 시작하는 우리 집 홈케어<br />React + TypeScript 웹 플랫폼</p><div className="side-line"/><span>DESIGNED FOR YOUR HOME · 2026</span></aside>
+    <aside className="desktop-side">
+        <div className="side-logo">
+            <img src={appPath('assets/brand-app-icon.png')} alt=""/>
+            <span>고쳐야집</span>
+        </div>
+        <p className="side-title">혼자서도 뚝딱,<br />고쳐야ZIP!</p>
+        <p>사진 한 장에서 시작하는 우리 집 홈케어<br />React + TypeScript 웹 플랫폼</p>
+        <div className="side-line"/>
+        <span>DESIGNED FOR YOUR HOME · 2026</span>
+    </aside>
     {toast && <div key={toast.id} className={`rx-toast ${toast.kind} ${toast.leaving ? 'leaving' : ''}`} role="status" onClick={clearToast}><Icon name={toast.kind === 'error' ? 'alert' : 'check'}/>{toast.message}</div>}
   </div>;
 }
