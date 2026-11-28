@@ -1,7 +1,9 @@
 node_modules/
 dist/
 .env
+.env.secret
 .env.*
 !.env.example
+__pycache__/
 coverage/
 *.log

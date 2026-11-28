@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { PageHeader, Field, Icon, Button, PrivacyNote } from '../components/UI';
+import { appPath } from '../lib/appPath';
 import { assertPhotos, maxPhotoCount, today } from '../lib/format';
 import type { Request } from '../types/models';
 
@@ -94,7 +95,7 @@ export default function NewRequestPage() {
         const cached = photoCacheRef.current[asset];
         if (cached)
             return cached;
-        const response = await fetch(`/assets/${asset}`);
+        const response = await fetch(appPath(`assets/${asset}`));
         if (!response.ok)
             throw new Error(`예시 사진(${asset})을 불러오지 못했어요.`);
         const blob = await response.blob();

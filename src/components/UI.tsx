@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { api } from '../services/api';
 import { useApp } from '../context/AppContext';
+import { appPath } from '../lib/appPath';
 import { day, fieldLabel, firstWork, money, statusLabel, allPhotos } from '../lib/format';
 import type { Request, Technician, Photo } from '../types/models';
 export type RegionBox = {
@@ -35,7 +36,16 @@ export function ScreenIntro({ tag, title, subtitle, illustration, tone = 'rose' 
     subtitle?: string;
     illustration?: string;
     tone?: string;
-}) { return <div className={`rx-intro rx-tone-${tone}`}><div><span className="rx-overline">{tag}</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>{illustration && <img src={`/assets/${illustration}`} alt=""/>}</div>; }
+}) {
+    return <div className={`rx-intro rx-tone-${tone}`}>
+        <div>
+            <span className="rx-overline">{tag}</span>
+            <h2>{title}</h2>
+            {subtitle && <p>{subtitle}</p>}
+        </div>
+        {illustration && <img src={appPath(`assets/${illustration}`)} alt=""/>}
+    </div>;
+}
 export function Empty({ icon = 'info', title, detail, action }: {
     icon?: string;
     title: string;
